@@ -14,14 +14,20 @@ def checkInput():
 
 dpg.create_context()
 
-with dpg.window(tag="Primary Window",label="Main"):
 
-    dpg.add_text("Image Here")
-    dpg.add_input_text(label="Your Choice", default_value="Input a value here")
-    dpg.add_button(label="Check", callback=checkInput())
-    dpg.add_input_text(label="Result", default_value="")
-    dpg.add_button(label="Next", callback=nextImg())
-    dpg.add_button(label="Answer", callback=giveAnswer())
+width, height, channels, data = dpg.load_image("Images/test.png")
+with dpg.texture_registry(show=False):
+    dpg.add_static_texture(width, height, data, tag="test")
+
+with dpg.window(tag="Primary Window",label="Main"):
+    with dpg.window(label="img"):
+        dpg.add_image("test")
+    with dpg.window(label="interface"):
+        dpg.add_input_text(label="Your Choice", default_value="Input a value here")
+        dpg.add_button(label="Check", callback=checkInput())
+        dpg.add_input_text(label="Result", default_value="")
+        dpg.add_button(label="Next", callback=nextImg())
+        dpg.add_button(label="Answer", callback=giveAnswer())
 
 dpg.create_viewport(title='Custom Title', width=800, height=600)
 dpg.set_primary_window("Primary Window", True)
