@@ -8,19 +8,32 @@ test="string.png"
 print(test[0:-4])
 
 folder_path = 'Images'
-cards= []
+cards= {}
 answer=""
 
 dpg.create_context()
+
+width, height, channels, data = dpg.load_image("Images/wa.png")
 with dpg.texture_registry(show=False):
-    for filename in glob.glob(os.path.join(folder_path, '*.png')):
-        cards.append(filename[7:])
-        width, height, channels, data = dpg.load_image(filename)
-        dpg.add_dynamic_texture(width, height, data, tag=filename[7:])
+    texture_id = dpg.add_dynamic_texture(width, height, data)
 
+for filename in glob.glob(os.path.join(folder_path, '*.png')):
+    width, height, channels, data = dpg.load_image(filename)
+    cards[filename[7:]] = data
 
+print(cards)
 def getRandomCard():
-    return cards[random.randrange(len(cards))]
+    #return cards[random.randrange(len(cards))]
+    card,data = random.choice(list(cards.items()))
+    return card
+
+def switchCard():
+    card, data = random.choice(list(cards.items()))
+    arr=[]
+    arr.append(card)
+    arr.append(data)
+    print(arr)
+    return arr
 
 def deleteCard():
     dpg.delete_item("card")
@@ -35,19 +48,23 @@ def checkInput():
     else:
         dpg.set_value("output", "False")
 
-def drawCard(card):
-    dpg.add_image(card, width=100, height=100, tag="card")
+def drawCard(data):
+    dpg.set_value(texture_id, data)
 
-def nextCard(sender, app_data, user_data):
-    answer = getRandomCard()
-    dpg.set_value("card", answer[data])
+def nextCard():
+    global answer
+    answer=switchCard()
+    print(answer[1])
+    drawCard(answer[1])
+    answer=answer[0]
+
 
 with dpg.window(tag="Primary Window", label="Hiragana Flashcards"):
 
     #Display group
     with dpg.group():
-        answer=getRandomCard()
-        drawCard(answer)
+        dpg.add_image(texture_id)
+        nextCard()
         #dpg.add_image(answer, width=100,height=100)
         #img = dpg.add_image(answer, width=100, height=100, tag="card")
         #dpg.delete_item(img)
@@ -65,7 +82,7 @@ with dpg.window(tag="Primary Window", label="Hiragana Flashcards"):
     #next card
     #give answer
     with dpg.group(horizontal=True):
-        dpg.add_button(label="Next",width=100, height=50, tag="nextCardButton")
+        dpg.add_button(label="Next",width=100, height=50, tag="nextCardButton", callback=nextCard)
         dpg.add_button(label="Answer",width=100, height=50, tag="giveAnswer")
     #Handlers
 
@@ -78,15 +95,13 @@ with dpg.window(tag="Primary Window", label="Hiragana Flashcards"):
         dpg.add_item_clicked_handler(callback=giveAnswer)
 
     #Next Card handler
-    with dpg.item_handler_registry(tag="nextCardHandler") as handler:
-        dpg.add_item_clicked_handler(callback=nextCard)
+    #with dpg.item_handler_registry(tag="nextCardHandler") as handler:
+    #    dpg.add_item_clicked_handler(callback=nextCard)
 
     #Binding buttons to handlers
     dpg.bind_item_handler_registry("checkButton", "check")
     dpg.bind_item_handler_registry("giveAnswer", "ansHandler")
     dpg.bind_item_handler_registry("nextCardButton", "nextCardHandler")
-
-print(dpg.get_item_configuration("card"))
 
 
 #Runing the app
